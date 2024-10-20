@@ -2,8 +2,11 @@ name: Build & Publish Release UAT APK
 
 on:
   push:
-    tags:
-      - '*'
+    branches:
+      - uat  # Change this to your default branch if it's different
+  pull_request:
+    branches:
+      - uat  
 
 jobs:
   Gradle:
