@@ -1,5 +1,5 @@
 import { Text, StyleSheet, View, Modal, TextInput, TouchableOpacity, Button, Alert, FlatList } from 'react-native';
-import React, { Component, useEffect } from 'react';
+import React, { Component, useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import Entypo from '@expo/vector-icons/Entypo';
 import { router } from 'expo-router';
@@ -26,22 +26,46 @@ var totp_list: totp[] = []
 interface State {
   modalVisible: boolean;
   keyInput: string;
+  currentTime: string
 }
 
 export default class Main extends Component<{}, State> {
+  private intervalId: NodeJS.Timeout | null = null; // Store the interval ID
+  
+  private seconds = "30"
+
   constructor(props: any) {
     super(props);
     // Initialize state with the defined types
+    const now = new Date();
+    const currentTime = now.toLocaleTimeString(); // Get the current time as a string
+    const secondTimer = now.getSeconds()
+    this.seconds = (30 -(secondTimer%30)).toString()
+    
 
     this.state = {
       modalVisible: false,
       keyInput: '',
+      currentTime:''
     };
 
     this.getAllList()
+    this.initTimer()
+    
+  }
 
-   
-  
+  initTimer(){
+    this.intervalId = setInterval(() => {
+
+      const now = new Date();
+      const currentTime = now.toLocaleTimeString(); // Get the current time as a string
+      const secondTimer = now.getSeconds()
+      this.seconds = (30 -(secondTimer%30)).toString()
+      
+      // if (now.getSeconds() === 30) {
+        this.setState({currentTime:currentTime}) // Note: Directly calling render is not recommended; consider using setState
+      // }
+    }, 1000); // Check every second
   }
 
   getAllList() {
@@ -91,7 +115,7 @@ export default class Main extends Component<{}, State> {
             renderItem={({ item }) => (
               <View style={styles.ListItem}>
                 <Text style={styles.itemText}>{item.name}</Text>
-                <Text>{this.getTotp(item.secret)}</Text>
+                <Text>{this.getTotp(item.secret)}  {this.seconds}</Text>
               </View>
             )}
           />
@@ -140,6 +164,14 @@ export default class Main extends Component<{}, State> {
         </TouchableOpacity>
       </View>
     );
+  }
+
+
+  componentWillUnmount() {
+    // Cleanup the interval when the component unmounts
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+    }
   }
 }
 
