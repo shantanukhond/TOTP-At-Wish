@@ -1,5 +1,7 @@
 {
     "cSpell.words": [
         "totp"
-    ]
+    ],
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.configuration.updateBuildConfiguration": "automatic"
 }

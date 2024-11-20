@@ -1,121 +1,256 @@
 import { Text, StyleSheet, View, Modal, TextInput, TouchableOpacity, Button, Alert, FlatList } from 'react-native';
-import React, { Component, useEffect, useState } from 'react';
+import React, { Component } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import Entypo from '@expo/vector-icons/Entypo';
 import { router } from 'expo-router';
 import * as SQLite from 'expo-sqlite';
 const STRINGS = require('../../constants/strings');
 import { TOTP } from 'otpauth';
+import { Row, Col } from 'react-native-flex-grid';
+import Fontisto from '@expo/vector-icons/Fontisto';
+import AntDesign from '@expo/vector-icons/AntDesign';
+import {validateTotpSecret} from '../helpers/SecretHelper'
+import { showToast } from '../helpers/GenHelper'
 
 
 interface totp {
-  name: string
-  secret: string
-  algorithm: string
-  created_date: string
-  digits: number
-  id: number
-  issuer: string
-  last_modified_date: string
-  logo: string
-  user_identifier: string
+  name: string;
+  secret: string;
+  algorithm: string;
+  created_date: string;
+  digits: number;
+  id: number;
+  issuer: string;
+  last_modified_date: string;
+  logo: string;
+  user_identifier: string;
 }
 
-var totp_list: totp[] = []
+var totp_list: totp[] = [];
+
 // Define the state interface
 interface State {
   modalVisible: boolean;
-  keyInput: string;
-  currentTime: string
+  secretInput: string;
+  appNameInput: string;
+  
+  currentTime: string;
+  dropdownVisible: number | null; // Track which item's dropdown is visible
 }
 
 export default class Main extends Component<{}, State> {
-  private intervalId: NodeJS.Timeout | null = null; // Store the interval ID
-  
-  private seconds = "30"
+  private intervalId: NodeJS.Timeout | null = null;
+  private seconds = '30';
 
+  
+    
   constructor(props: any) {
     super(props);
-    // Initialize state with the defined types
     const now = new Date();
-    const currentTime = now.toLocaleTimeString(); // Get the current time as a string
-    const secondTimer = now.getSeconds()
-    this.seconds = (30 -(secondTimer%30)).toString()
+    // const currentTime = now.toLocaleTimeString();
+    const secondTimer = now.getSeconds();
+    this.seconds = (30 - (secondTimer % 30)).toString();
     
 
     this.state = {
       modalVisible: false,
-      keyInput: '',
-      currentTime:''
+      secretInput: '',
+      appNameInput:'',
+      currentTime: '',
+      dropdownVisible: null, // No dropdown is visible initially
     };
 
-    this.getAllList()
-    this.initTimer()
-    
+    this.getAllList();
+    this.initTimer();
+    this.redirectToInputAppName = this.redirectToInputAppName.bind(this);
+
   }
 
-  initTimer(){
+
+  initTimer() {
     this.intervalId = setInterval(() => {
-
       const now = new Date();
-      const currentTime = now.toLocaleTimeString(); // Get the current time as a string
-      const secondTimer = now.getSeconds()
-      this.seconds = (30 -(secondTimer%30)).toString()
-      
-      // if (now.getSeconds() === 30) {
-        this.setState({currentTime:currentTime}) // Note: Directly calling render is not recommended; consider using setState
-      // }
-    }, 1000); // Check every second
+      const currentTime = now.toLocaleTimeString();
+      const secondTimer = now.getSeconds();
+      this.seconds = (30 - (secondTimer % 30)).toString();
+
+      this.setState({ currentTime: currentTime });
+    }, 1000);
   }
+
+
+  onScreenFocus = () => {
+    // Your logic when the screen comes into focus
+    console.log("Perform necessary actions when screen is focused!");
+  };
+
 
   getAllList() {
     const db = SQLite.openDatabaseSync(STRINGS.DB_NAME);
-    totp_list = db.getAllSync("SELECT * FROM totp");
-    console.log(totp_list)
+    totp_list = db.getAllSync('SELECT * FROM totp');
   }
+
 
   toggleModal = () => {
     this.setState({ modalVisible: !this.state.modalVisible });
   };
 
+
   handleButtonPress = () => {
-    Alert.alert('Input Text:', this.state.keyInput);
+    //Save the Secret to db
+    if(this.state.appNameInput.length < 3){
+
+    }else if(this.state.secretInput.length < 3){
+     
+    }else{
+      const saveToDatabase = async () => {
+        //Writing to db
+        const db = SQLite.openDatabaseSync(STRINGS.DB_NAME);
+        try {
+          await db.execAsync(
+            `
+               INSERT INTO totp (name, logo, secret, created_date, last_modified_date, issuer, user_identifier, algorithm, digits)
+          VALUES ('${this.state.appNameInput}',null, '${this.state.secretInput}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, null ,null, 'SHA1', 8);
+            `,
+          );
+          
+        } catch (ex) {
+          console.log(ex)
+        }
+    
+      }
+
+      saveToDatabase()
+    
+    }
   };
 
+
   handlePressCamera = () => {
-    router.push("/qrScannerModal")
+    router.push('/QrCodeScannerCam');
   };
+
 
   getTotp(secret: string) {
     const totp = new TOTP({
       secret,
-      digits: 6, // Length of the generated OTP
-      // algorithm: 'SHA-256', // You can also use 'SHA-256' or 'SHA-512'
-      period: 30, // Time period in seconds
+      digits: 6,
+      period: 30,
     });
 
-    var totp_val = ""
+    let totp_val = '';
     try {
-      totp_val = String(totp.generate())
+      totp_val = String(totp.generate());
     } catch (ex) {
-      console.log(ex)
+      console.log(ex);
     }
-    
-    return totp_val
+
+    return totp_val;
   }
 
+
+  toggleDropdown = (id: number) => {
+    if (this.state.dropdownVisible === id) {
+      this.setState({ dropdownVisible: null });
+    } else {
+      this.setState({ dropdownVisible: id });
+    }
+  };
+
+
+  deleteItem(id: number, name: string): void {
+
+
+    Alert.alert(
+      `Do you really want to delete ${name}?`,
+      "This action is permanent and cannot be undone!",
+      [
+        {
+          text: "Cancel",
+          onPress: () => console.log("Deletion cancelled"),
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          onPress: () => {
+            const db = SQLite.openDatabaseSync(STRINGS.DB_NAME);
+            const delete_result = db.getAllSync(`DELETE FROM totp where id=${id}`);
+            console.log(delete_result)
+            totp_list = db.getAllSync('SELECT * FROM totp');
+            const now = new Date();
+            const currentTime = now.toLocaleTimeString();
+
+            this.setState({ currentTime: currentTime });
+          },
+          style: "destructive", // optional, makes the delete button red on iOS
+        },
+      ],
+      { cancelable: false } // ensures the dialog won't be dismissed by tapping outside
+    );
+  };
+
+
+  redirectToInputAppName(){
+    const appKey = this.state.secretInput;
+    // 
+    if (!appKey || !validateTotpSecret(appKey)) {
+      showToast("Please enter valid secret")
+      return
+    }
+
+    router.push({
+      pathname: "/InputAppName",
+      params: { data: JSON.stringify({"secret":appKey}) }
+    });
+    
+  }
+  
+
   render() {
+
+
     return (
       <View style={styles.Container}>
         <View style={styles.ListViewContainer}>
           <FlatList
             data={totp_list}
             style={styles.ListView}
-            keyExtractor={item => item.id.toString()}
+            keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
               <View style={styles.ListItem}>
-                <Text style={styles.itemText}>{item.name}</Text>
-                <Text>{this.getTotp(item.secret)}  {this.seconds}</Text>
+                <TouchableOpacity
+                  onLongPress={() => this.toggleDropdown(item.id)}
+                >
+                  <Row>
+                    <Col sm={2} style={styles.ColIcon}>
+                      <Fontisto name="app-store" size={30} color="black" />
+                    </Col>
+                    <Col sm={10}>
+                      <Text style={styles.itemText}>{item.name}</Text>
+                      <Text>
+                        {this.getTotp(item.secret)} {this.seconds}
+                      </Text>
+                    </Col>
+                  </Row>
+                </TouchableOpacity>
+
+                {/* Dropdown menu */}
+                {this.state.dropdownVisible === item.id && (
+                  <View style={styles.dropdownMenu}>
+                    <TouchableOpacity
+                      style={styles.dropdownItem}
+                      onPress={() => Alert.alert('Edit', `Edit ${item.name}`)}
+                    >
+                      <AntDesign name="edit" size={24} color="black" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.dropdownItem}
+                      onPress={() => this.deleteItem(item.id, item.name)}
+                    >
+                      <Text><AntDesign name="delete" size={24} color="black" /></Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
               </View>
             )}
           />
@@ -130,9 +265,11 @@ export default class Main extends Component<{}, State> {
         >
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
-
               <View>
-                <TouchableOpacity style={styles.ContainerAlignCenter} onPress={this.handlePressCamera}>
+                <TouchableOpacity
+                  style={styles.ContainerAlignCenter}
+                  onPress={this.handlePressCamera}
+                >
                   <Entypo name="camera" size={24} color="black" />
                   <Text>Scan QR Code</Text>
                 </TouchableOpacity>
@@ -146,12 +283,15 @@ export default class Main extends Component<{}, State> {
 
               <TextInput
                 style={styles.input}
-                placeholder="Enter text"
-                value={this.state.keyInput}
-                onChangeText={(text) => this.setState({ keyInput: text })}
+                placeholder="Enter Key"
+                value={this.state.secretInput}
+                onChangeText={(text) => this.setState({ secretInput: text })}
               />
-              <Button title="Submit" onPress={this.handleButtonPress} />
-              <TouchableOpacity onPress={this.toggleModal} style={styles.closeButton}>
+              <Button title="Submit" onPress={this.redirectToInputAppName} />
+              <TouchableOpacity
+                onPress={this.toggleModal}
+                style={styles.closeButton}
+              >
                 <Text style={styles.closeButtonText}>Close</Text>
               </TouchableOpacity>
             </View>
@@ -168,14 +308,12 @@ export default class Main extends Component<{}, State> {
 
 
   componentWillUnmount() {
-    // Cleanup the interval when the component unmounts
     if (this.intervalId) {
       clearInterval(this.intervalId);
     }
   }
+
 }
-
-
 
 const styles = StyleSheet.create({
   Container: {
@@ -223,12 +361,10 @@ const styles = StyleSheet.create({
     color: '#03A9F4',
     fontSize: 16,
   },
-
   ContainerAlignCenter: {
     justifyContent: 'center',
     alignItems: 'center',
   },
-
   containerLine: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -244,25 +380,45 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-
   ListViewContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 10,
-    width: "100%"
+    width: '100%',
   },
   ListItem: {
+    flex: 12,
+    marginHorizontal: 'auto',
     backgroundColor: '#f9c2ff',
     padding: 20,
     marginVertical: 8,
     borderRadius: 10,
-    width: "100%"
+    width: '100%',
   },
   itemText: {
     fontSize: 16,
   },
   ListView: {
-    width: "100%"
+    width: '100%',
+  },
+  dropdownMenu: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    borderRadius: 5,
+    padding: 10,
+    zIndex: 1000,
+  },
+  dropdownItem: {
+    paddingVertical: 4,
+  },
+  ColIcon: {
+    alignItems: "center",
+    alignContent: "center",
+    height: "100%",
+    textAlign: "center"
   }
 });
+
+

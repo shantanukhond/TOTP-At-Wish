@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react'
 import { Stack } from 'expo-router'
 import * as SplashScreen from 'expo-splash-screen'
+import { NavigationContainer } from '@react-navigation/native';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -10,15 +11,28 @@ const RootNavigation = () => {
     })
 
     return (
+        <NavigationContainer>
         <Stack>
+            <Stack.Screen name='index' options={{
+                title: "TOTP At Wish"
+            }} />
+
              <Stack.Screen
-                name="qrScannerModal"
+                name="QrCodeScannerCam"
+                options={{
+                    presentation: 'modal',
+                    title:"Scan TOTP QR code"
+                }}
+            />
+            <Stack.Screen
+                name="InputAppName"
                 options={{
                     presentation: 'modal',
                     title:"Scan TOTP QR code"
                 }}
             />
         </Stack >
+        </NavigationContainer>
     )
 }
 

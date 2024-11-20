@@ -5,6 +5,7 @@ import { BarcodeScanningResult, CameraView } from 'expo-camera'; // Import the t
 const STRINGS = require('../../constants/strings');
 import * as SQLite from 'expo-sqlite';
 import { useNavigation } from '@react-navigation/native';
+import { router } from 'expo-router';
 
 
 interface TOTP_URI {
@@ -81,7 +82,7 @@ const parseTOTP_URI = (uri: string): TOTP_URI | null => {
   }
 };
 
-export default function App() {
+export default function QrCodeScannerCam() {
 
   // Set the type to allow 'null' and 'boolean'
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
@@ -91,14 +92,14 @@ export default function App() {
   const [name, setName] = useState<string | null>(null); // Store username@appname
   const [cameraRef, setCameraRef] = useState<CameraView | null>(null);
   const [modalVisible, setModalVisible] = useState(false); // Use useState for modal visibility
-  const [appNameInput,setAppNameInput] = useState<string>(""); // Use useState for modal visibility
+  const [appNameInput, setAppNameInput] = useState<string>(""); // Use useState for modal visibility
   const [totpParsedObj, setTotpParsedObj] = useState<TOTP_URI | null>(null); // Use useState for modal visibility
   const navigation = useNavigation();
 
   // Get the screen width to make the innerContainer square
   const screenWidth = Dimensions.get('window').width;
 
-  
+
 
 
   // Request camera permission
@@ -123,28 +124,35 @@ export default function App() {
 
       if (parsedURI) {
         // console.log('Valid TOTP URI:', parsedURI);
-       
+
         setTotpParsedObj(parsedURI)
-        setAppNameInput(parsedURI.account||"")
-        setModalVisible(true);
-        
+        setAppNameInput(parsedURI.account || "")
+        const urlObj = { app_data: parsedURI };
+
+        // router.push('/InputAppName');
+        router.push({
+          pathname: "/InputAppName",
+          params: { data: JSON.stringify(parsedURI) }
+        });
+        //setModalVisible(true);
+
       } else {
         console.log('Invalid TOTP URI');
       }
     }
   };
-
+  
 
   const toggleModal = () => {
     setModalVisible(!modalVisible);
   };
 
-  const setTextVar = (text:string)=>{
+  const setTextVar = (text: string) => {
     // useState({ keyInput: text })
     // appNameInput = text
     setAppNameInput(text)
   }
-  
+
   // Simulated function to save name and secret to the database
   const saveToDatabase = async () => {
     //Writing to db
@@ -162,7 +170,7 @@ export default function App() {
     } catch (ex) {
       console.log(ex)
     }
-    
+
   }
 
   if (hasPermission === null) {
@@ -198,10 +206,10 @@ export default function App() {
               value={appNameInput}
               onChangeText={(text) => setTextVar(text)}
             />
-            <Button 
+            <Button
               title='SAVE'
               onPress={saveToDatabase}
-             />
+            />
           </View>
         </View>
 
@@ -214,7 +222,7 @@ export default function App() {
         />
       )}
 
-      {scannedData && (
+      {/* {scannedData && (
         <View style={styles.resultContainer}>
           <Text style={styles.resultText}>Scanned Data: {scannedData}</Text>
         </View>
@@ -230,7 +238,7 @@ export default function App() {
         <View style={styles.resultContainer}>
           <Text style={styles.resultText}>Extracted Name: {name}</Text>
         </View>
-      )}
+      )} */}
     </View>
   );
 }

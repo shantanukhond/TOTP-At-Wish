@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "OtpAtWish",
-    "slug": "OtpAtWish",
+    "slug": "totpatwish",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./src/assets/images/icon.png",
@@ -19,7 +19,12 @@
       "adaptiveIcon": {
         "foregroundImage": "./src/assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "org.atwish.totpatwish"
     },
     "web": {
       "bundler": "metro",
@@ -28,10 +33,17 @@
     },
     "plugins": [
       "expo-router",
-      "expo-camera"
+      "expo-camera",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "14be1709-e71d-404d-bd26-a73a8543a4e2"
+      }
+    },
+    "owner": "shantanukhond"
   }
 }
