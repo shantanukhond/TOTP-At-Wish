@@ -2,21 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { Text, View, Button, StyleSheet, Dimensions, Alert, Modal, TextInput } from 'react-native';
 import { Camera } from 'expo-camera'; // Ensure this import is correct
 import { BarcodeScanningResult, CameraView } from 'expo-camera'; // Import the type for barcodes
-const STRINGS = require('../../constants/strings');
-import * as SQLite from 'expo-sqlite';
+// import * as SQLite from 'expo-sqlite';
 import { useNavigation } from '@react-navigation/native';
 import { router } from 'expo-router';
+import SecretModel from '../helpers/SecretModel';
 
 
-interface TOTP_URI {
-  type: string;
-  account: string;
-  secret: string;
-  issuer?: string;
-  algorithm?: string;
-  digits?: number;
-  period?: number;
-}
+// interface TOTP_URI {
+//   type: string;
+//   account: string;
+//   secret: string;
+//   issuer?: string;
+//   algorithm?: string;
+//   digits?: number;
+//   period?: number;
+// }
 
 
 
@@ -26,7 +26,7 @@ const isBase32 = (str: string): boolean => {
   return base32Regex.test(str);
 };
 
-const parseTOTP_URI = (uri: string): TOTP_URI | null => {
+const parseTOTP_URI = (uri: string): SecretModel | null => {
   try {
     // Check that the URI starts with 'otpauth://totp/'
     const totpRegex = /^otpauth:\/\/totp\/(.+)\?(.+)/;
@@ -93,7 +93,7 @@ export default function QrCodeScannerCam() {
   const [cameraRef, setCameraRef] = useState<CameraView | null>(null);
   const [modalVisible, setModalVisible] = useState(false); // Use useState for modal visibility
   const [appNameInput, setAppNameInput] = useState<string>(""); // Use useState for modal visibility
-  const [totpParsedObj, setTotpParsedObj] = useState<TOTP_URI | null>(null); // Use useState for modal visibility
+  const [totpParsedObj, setTotpParsedObj] = useState<SecretModel | null>(null); // Use useState for modal visibility
   const navigation = useNavigation();
 
   // Get the screen width to make the innerContainer square
@@ -154,24 +154,7 @@ export default function QrCodeScannerCam() {
   }
 
   // Simulated function to save name and secret to the database
-  const saveToDatabase = async () => {
-    //Writing to db
-    const db = SQLite.openDatabaseSync(STRINGS.DB_NAME);
-    try {
-      await db.execAsync(
-        `
-           INSERT INTO totp (name, logo, secret, created_date, last_modified_date, issuer, user_identifier, algorithm, digits)
-      VALUES ('${totpParsedObj?.account}',null, '${totpParsedObj?.secret}', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '${totpParsedObj?.issuer}',null, '${totpParsedObj?.algorithm}', ${totpParsedObj?.digits});
-        `,
-      );
-      console.log(`Inserted into DB ${name}`)
-      toggleModal()
-      navigation.goBack()
-    } catch (ex) {
-      console.log(ex)
-    }
 
-  }
 
   if (hasPermission === null) {
     return <Text>Requesting for camera permission</Text>;
@@ -208,7 +191,7 @@ export default function QrCodeScannerCam() {
             />
             <Button
               title='SAVE'
-              onPress={saveToDatabase}
+              // onPress={saveToDatabase}
             />
           </View>
         </View>

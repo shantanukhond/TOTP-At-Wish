@@ -11,7 +11,6 @@ const RootNavigation = () => {
     })
 
     return (
-        <NavigationContainer>
         <Stack>
             <Stack.Screen name='index' options={{
                 title: "TOTP At Wish"
@@ -32,7 +31,7 @@ const RootNavigation = () => {
                 }}
             />
         </Stack >
-        </NavigationContainer>
+        // </NavigationContainer>
     )
 }
 

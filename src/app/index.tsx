@@ -23,7 +23,9 @@ const createTable = async () => {
         issuer TEXT,
         user_identifier TEXT,
         algorithm TEXT DEFAULT 'SHA-1',
-        digits INTEGER DEFAULT 6
+        digits INTEGER DEFAULT 6,
+        UNIQUE(secret, issuer, algorithm, digits)
+
       );
     `;
   
@@ -57,7 +59,9 @@ const RootNavigation = () => {
 
     return (
         <>  
-            <Stack screenOptions={{headerShown:false}}/>
+            <Stack screenOptions={{headerShown:false}}>
+              <Stack.Screen name="index" />
+            </Stack>
         </>
     )
 }

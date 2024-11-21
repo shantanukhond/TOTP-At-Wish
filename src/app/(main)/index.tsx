@@ -11,22 +11,22 @@ import Fontisto from '@expo/vector-icons/Fontisto';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import {validateTotpSecret} from '../helpers/SecretHelper'
 import { showToast } from '../helpers/GenHelper'
+import SecretModel from '../helpers/SecretModel';
 
+// interface totp {
+//   name: string;
+//   secret: string;
+//   algorithm: string;
+//   created_date: string;
+//   digits: number;
+//   id: number;
+//   issuer: string;
+//   last_modified_date: string;
+//   logo: string;
+//   user_identifier: string;
+// }
 
-interface totp {
-  name: string;
-  secret: string;
-  algorithm: string;
-  created_date: string;
-  digits: number;
-  id: number;
-  issuer: string;
-  last_modified_date: string;
-  logo: string;
-  user_identifier: string;
-}
-
-var totp_list: totp[] = [];
+var totp_list: SecretModel[] = [];
 
 // Define the state interface
 interface State {
