@@ -3,7 +3,7 @@ import { useLocalSearchParams } from "expo-router/build/hooks";
 import { View, Text, TextInput, Button, StyleSheet, Image } from "react-native";
 import { saveToDatabase } from '../helpers/DbHandler'
 import { CommonActions, useNavigation } from '@react-navigation/native';
-import { router } from "expo-router";
+
 
 export default function InputAppName() {
   const item = useLocalSearchParams().data;
