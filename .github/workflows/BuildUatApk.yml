@@ -22,21 +22,27 @@ jobs:
         with:
           node-version: '18' # Use the Node.js version supported by Expo
 
-      # Install npm dependencies
-      - name: Install Dependencies
-        run: npm install
+      # Install EAS CLI
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
+
+      # Authenticate with Expo
+      - name: Authenticate with Expo
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: eas whoami
 
       # Build Android App
       - name: Build Android
         env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }} # Set the EXPO_TOKEN in your repository secrets
-        run: npx expo build:android --non-interactive
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: eas build -p android --non-interactive
 
-      # Build iOS App (requires Expo managed workflow)
+      # Build iOS App
       - name: Build iOS
         env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }} # Set the EXPO_TOKEN in your repository secrets
-        run: npx expo build:ios --non-interactive
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: eas build -p ios --non-interactive
 
       # Upload build artifacts
       - name: Upload Build Artifacts
